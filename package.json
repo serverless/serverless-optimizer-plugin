@@ -1,0 +1,46 @@
+{
+  "name": "serverless-optimizer-plugin",
+  "version": "0.0.1",
+  "engines": {
+    "node": ">=4.0"
+  },
+  "description": "Serverless Optimizer Plugin - Optimizers for reducing Lambda file sizes and improving performance",
+  "author": "serverless.com",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/serverless/serverless-optimizer-plugin"
+  },
+  "keywords": [
+    "serverless optimizer plugin",
+    "serverless optimizer",
+    "serverless framework plugin",
+    "serverless applications",
+    "serverless plugins",
+    "lambda browserify",
+    "lambda minify",
+    "api gateway",
+    "lambda",
+    "aws",
+    "aws lambda",
+    "amazon",
+    "amazon web services",
+    "serverless.com"
+  ],
+  "main": "index.js",
+  "bin": {},
+  "scripts": {
+    "test": "mocha tests/all"
+  },
+  "devDependencies": {
+    "chai": "^3.2.0",
+    "mocha": "^2.2.5"
+  },
+  "dependencies": {
+    "babelify": "^7.2.0",
+    "bluebird": "^3.0.6",
+    "browserify": "^12.0.1",
+    "uglify-js": "^2.6.1",
+    "wrench": "^1.5.8"
+  }
+}
