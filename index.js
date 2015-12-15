@@ -4,11 +4,9 @@
  * Serverless Optimizer Plugin
  */
 
-module.exports = function(serverlessPath) {
+module.exports = function(ServerlessPlugin) {
 
   const path       = require('path'),
-      SPlugin      = require(path.join(serverlessPath, 'ServerlessPlugin')),
-      SUtils       = require(path.join(serverlessPath, 'utils')),
       fs           = require('fs'),
       os           = require('os'),
       babelify     = require('babelify'),
@@ -21,7 +19,7 @@ module.exports = function(serverlessPath) {
    * ServerlessOptimizer
    */
 
-  class ServerlessOptimizer extends SPlugin {
+  class ServerlessOptimizer extends ServerlessPlugin {
 
     /**
      * Constructor
@@ -124,7 +122,7 @@ module.exports = function(serverlessPath) {
 
       // Add custom transforms
       if (evt.function.custom.optimize.transform) {
-        SUtils.sDebug(`"${evt.stage} - ${evt.region.region} - ${evt.function.name}": Adding transform - ${evt.function.package.optimize.transform}`);
+        //SUtils.sDebug(`"${evt.stage} - ${evt.region.region} - ${evt.function.name}": Adding transform - ${evt.function.package.optimize.transform}`);
         b.transform(evt.function.custom.optimize.transform);
       }
 
