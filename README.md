@@ -1,7 +1,7 @@
 Serverless Optimizer Plugin
 =============================
 
-**Note:** Rquires Serverless *v0.0.13* or higher.
+**Note:** Requires Serverless *v0.0.13* or higher.
 
 Currently a work in progress :)  Needs to print debug information but there is currently a bug there.
 
