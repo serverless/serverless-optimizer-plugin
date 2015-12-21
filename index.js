@@ -6,14 +6,16 @@
 
 module.exports = function(ServerlessPlugin) {
 
-  const path       = require('path'),
-      fs           = require('fs'),
-      os           = require('os'),
-      babelify     = require('babelify'),
-      browserify   = require('browserify'),
-      UglifyJS     = require('uglify-js'),
-      wrench       = require('wrench'),
-      BbPromise    = require('bluebird');
+const _              = require('lodash'),
+      BbPromise      = require('bluebird'),
+      UglifyJS       = require('uglify-js'),
+      babelify       = require('babelify'),
+      browserify     = require('browserify'),
+      fs             = require('fs'),
+      os             = require('os'),
+      path           = require('path'),
+      tsify          = require('tsify'),
+      wrench         = require('wrench');
 
   /**
    * ServerlessOptimizer
@@ -56,15 +58,22 @@ module.exports = function(ServerlessPlugin) {
      */
 
     _optimize(evt) {
-
       let _this = this;
+      let conf = _.merge({}, {
+        browserify: {
+            plugins: [],
+            transforms: [],
+            exclude: [],
+            ignore: [],
+        }
+      }, this.S._projectJson.custom.optimize, evt.function.custom.optimize);
 
       // Skip plugin if this function is not optimized
-      if (!evt.function.custom.optimize) return BbPromise.resolve(evt);
+      if (!conf) return BbPromise.resolve(evt);
 
-      if (evt.function.custom.optimize.browserify) {
+      if (conf.browserify) {
 
-        return _this._browserifyBundle(evt)
+        return _this._browserifyBundle(evt, conf)
             .then(optimizedCodeBuffer => {
 
               let envData         = fs.readFileSync(path.join(evt.function.pathDist, '.env')),
@@ -85,7 +94,7 @@ module.exports = function(ServerlessPlugin) {
       }
 
       // Otherwise, skip plugin
-      return BbPromise.resolve(evt)
+      return BbPromise.resolve(evt);
     }
 
     /**
@@ -93,8 +102,7 @@ module.exports = function(ServerlessPlugin) {
      * - Browserify the code and return buffer of bundled code
      */
 
-    _browserifyBundle(evt) {
-
+    _browserifyBundle(evt, conf) {
       let _this       = this;
       let uglyOptions = {
         mangle:   true, // @see http://lisperator.net/uglifyjs/compress
@@ -103,7 +111,7 @@ module.exports = function(ServerlessPlugin) {
 
       let b = browserify({
         basedir:          evt.function.pathDist,
-        entries:          [evt.function.handler.split('.')[0] + '.js'],
+        entries:          [evt.function.handler.split('.')[0] + '.' + (conf.handlerExt || 'js')],
         standalone:       'lambda',
         browserField:     false,  // Setup for node app (copy logic of --node in bin/args.js)
         builtins:         false,
@@ -117,28 +125,23 @@ module.exports = function(ServerlessPlugin) {
         }
       });
 
-      // If Babelify is set, do it here
-      if (evt.function.custom.optimize.babelify) b.transform(babelify);
+      conf.browserify.plugins.map(plug => {
+          if (typeof(plug) === typeof(''))
+              plug = {name: plug};
+          b.plugin(require(plug.name), plug.opts);
+      });
 
-      // Add custom transforms
-      if (evt.function.custom.optimize.transform) {
-        //SUtils.sDebug(`"${evt.stage} - ${evt.region.region} - ${evt.function.name}": Adding transform - ${evt.function.package.optimize.transform}`);
-        b.transform(evt.function.custom.optimize.transform);
-      }
+      conf.browserify.transforms.map(transform => {
+          if (typeof(transform) === typeof(''))
+              transform = {name: transform};
+        b.transform(require(transform.name), transform.opts);
+      });
 
       // browserify.exclude
-      if (evt.function.custom.optimize.browserify.exclude) {
-        evt.function.custom.optimize.browserify.exclude.forEach(file => {
-          b.exclude(file);
-        });
-      }
+      conf.browserify.exclude.forEach(file => b.exclude(file));
 
       // browserify.ignore
-      if (evt.function.custom.optimize.browserify.ignore) {
-        evt.function.custom.optimize.browserify.ignore.forEach(file => {
-          b.ignore(file);
-        });
-      }
+      conf.browserify.ignore.forEach(file => b.ignore(file));
 
       // Perform Bundle
       let bundledFilePath = path.join(evt.function.pathDist, 'bundled.js');   // Save for auditing
@@ -149,7 +152,6 @@ module.exports = function(ServerlessPlugin) {
         b.bundle(function(err, bundledBuf) {
 
           if (err) {
-            console.error('Error running browserify bundle');
             reject(err);
           } else {
 

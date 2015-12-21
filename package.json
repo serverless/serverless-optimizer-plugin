@@ -40,6 +40,8 @@
     "babelify": "^7.2.0",
     "bluebird": "^3.0.6",
     "browserify": "^12.0.1",
+    "lodash": "^3.10.1",
+    "tsify": "^0.13.1",
     "uglify-js": "^2.6.1",
     "wrench": "^1.5.8"
   }
