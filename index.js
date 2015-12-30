@@ -15,6 +15,7 @@ module.exports = function(ServerlessPlugin) {
 
   const DEFAULT_CONFIG = {
     includePaths: [],
+    requires: [],
     plugins: [],
     transforms: [],
     exclude: [],
@@ -89,6 +90,13 @@ module.exports = function(ServerlessPlugin) {
           //__dirname: insertGlobals.lets.__dirname,
           process: function() {}
         }
+      });
+
+      // browserify.require
+      conf.requires.map(req => {
+        if (typeof(req) === typeof(''))
+          req = {name: req};
+        b.require(req.name, req.opts);
       });
 
       // browserify.plugin
