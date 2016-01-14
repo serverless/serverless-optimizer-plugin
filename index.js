@@ -188,27 +188,37 @@ module.exports = function(ServerlessPlugin) {
       let compressPaths = [],
           ignore        = ['.DS_Store'],
           stats,
-          fullPath;
+          fullPath,
+          srcPath,
+          destPath,
+          destDirPath;
 
       // Skip if undefined
       if (!evt.function.custom.optimize.includePaths) return compressPaths;
 
       // Collect includePaths
       evt.function.custom.optimize.includePaths.forEach(p => {
+        if( p.src && p.dest ){
+          srcPath = p.src;
+          destPath = p.dest;
+          destDirPath = p.dest;
+        } else {
+          srcPath = p;
+          destPath = p;
+          destDirPath = path.basename(p);
+        }
 
         try {
-          fullPath = path.resolve(path.join(evt.function.pathDist, p));
+          fullPath = path.resolve(path.join(evt.function.pathDist, srcPath));
           stats    = fs.lstatSync(fullPath);
         } catch (e) {
-          console.error('Cant find includePath ', p, e);
+          console.error('Cant find includePath ', srcPath, e);
           throw e;
         }
 
         if (stats.isFile()) {
-          compressPaths.push({fileName: p, data: fs.readFileSync(fullPath)});
+          compressPaths.push({fileName: destPath, data: fs.readFileSync(fullPath)});
         } else if (stats.isDirectory()) {
-
-          let dirname = path.basename(p);
 
           wrench
               .readdirSyncRecursive(fullPath)
@@ -221,7 +231,7 @@ module.exports = function(ServerlessPlugin) {
 
                 let filePath = [fullPath, file].join('/');
                 if (fs.lstatSync(filePath).isFile()) {
-                  let pathInZip = path.join(dirname, file);
+                  let pathInZip = path.join(destDirPath, file);
                   compressPaths.push({fileName: pathInZip, data: fs.readFileSync(filePath)});
                 }
               });
