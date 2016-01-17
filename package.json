@@ -1,10 +1,10 @@
 {
   "name": "serverless-optimizer-plugin",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "engines": {
     "node": ">=4.0"
   },
-  "description": "Serverless Optimizer Plugin - Optimizers for reducing Lambda file sizes and improving performance",
+  "description": "Serverless Optimizer Plugin - Significantly reduces Lambda file size and improves performance",
   "author": "serverless.com",
   "license": "MIT",
   "repository": {
@@ -40,6 +40,7 @@
     "babelify": "^7.2.0",
     "bluebird": "^3.0.6",
     "browserify": "^12.0.1",
+    "lodash": "^4.0.0",
     "uglify-js": "^2.6.1",
     "wrench": "^1.5.8"
   }
