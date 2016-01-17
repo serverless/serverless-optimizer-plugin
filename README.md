@@ -22,6 +22,16 @@ npm install serverless-optimizer-plugin --save
 }
 ```
 
-* Adding the `custom.optimize` property in `s-component.json` applies the optimization setting to ALL functions in that component.  Adding the `custom.optimize` property to `s-function.json` applies the optimization setting to ONLY that specific function.  You can use `custom.optimize` in both places.  The `custom.optimize` setting in `s-function.json` will override the setting in `s-component.json`.
+* Add the plugin to the `plugins` array in your Serverless Project's `s-project.json`, like this:
+
+```
+plugins: [
+    "serverless-plugin-optimizer"
+]
+```
+
+* All done!
+
+Adding the `custom.optimize` property in `s-component.json` applies the optimization setting to ALL functions in that component.  Adding the `custom.optimize` property to `s-function.json` applies the optimization setting to ONLY that specific function.  You can use `custom.optimize` in both places.  The `custom.optimize` setting in `s-function.json` will override the setting in `s-component.json`.
 
 We're currently working on adding support for Babelify and Typsecript.  Check back for updates!
