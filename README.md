@@ -37,13 +37,19 @@ Adding the `custom.optimize` property in `s-component.json` applies the optimiza
 
 ## ES6 with Babel and Babelify
 
-Bundles can be transformed to support ES6 features.
+Bundles are packaged with Browserify, and can be transformed to support ES6 features with Babelify.
 
-Assuming you have a node component called "nodejscomponent", install babelify within the context of that component:
 
-```shell
-cd nodejscomponent && npm install babelify babel-preset-es2015 --save
-```
+Install babelify within the root context of your project:
+
+    npm install babelify --save
+
+
+Assuming you have a node component called "nodejscomponent", install any babelify presets within the context of that component:
+
+
+    cd nodejscomponent && npm install babel-preset-es2015 --save
+
 
 Add the babelify transform to `s-component.json`:
 
