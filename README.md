@@ -34,4 +34,40 @@ plugins: [
 
 Adding the `custom.optimize` property in `s-component.json` applies the optimization setting to ALL functions in that component.  Adding the `custom.optimize` property to `s-function.json` applies the optimization setting to ONLY that specific function.  You can use `custom.optimize` in both places.  The `custom.optimize` setting in `s-function.json` will override the setting in `s-component.json`.
 
-We're currently working on adding support for Babelify and Typsecript.  Check back for updates!
+
+## ES6 with Babel and Babelify
+
+Bundles can be transformed to support ES6 features.
+
+Assuming you have a node component called "nodejscomponent", install babelify within the context of that component:
+
+```shell
+cd nodejscomponent && npm install babelify babel-preset-es2015 --save
+```
+
+Add the babelify transform to `s-component.json`:
+
+```javascript
+{
+    "name": "nodejscomponent",
+    "runtime": "nodejs",
+    "custom": {
+        "optimize": {
+            "transforms": [
+                {
+                    "name": "babelify",
+                    "opts": {
+                        "presets": [
+                            "es2015"
+                        ]
+                    }
+                }
+            ]
+        }
+    }
+}
+
+```
+
+
+We're currently working on adding support for Typsecript.  Check back for updates!
