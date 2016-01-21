@@ -203,7 +203,7 @@ module.exports = function(ServerlessPlugin) {
 
             // Minify browserified data
 
-            if (_this.function.custom.optimize && _this.function.custom.optimize.minify !== false) {
+            if (_this.config.minify !== false) {
 
               let result = UglifyJS.minify(_this.pathBundled, uglyOptions);
 
@@ -257,10 +257,10 @@ module.exports = function(ServerlessPlugin) {
         fullPath;
 
       // Skip if undefined
-      if (!_this.function.custom.includePaths) return compressPaths;
+      if (!_this.config.includePaths) return compressPaths;
 
       // Collect includePaths
-      _this.function.custom.includePaths.forEach(p => {
+      _this.config.includePaths.forEach(p => {
 
         try {
           fullPath = path.resolve(path.join(_this.evt.data.pathDist, p));
