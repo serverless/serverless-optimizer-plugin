@@ -10,7 +10,6 @@ module.exports = function(ServerlessPlugin) {
     _           = require('lodash'),
     fs          = require('fs'),
     os          = require('os'),
-    babelify    = require('babelify'),
     browserify  = require('browserify'),
     UglifyJS    = require('uglify-js'),
     wrench      = require('wrench'),
@@ -134,7 +133,7 @@ module.exports = function(ServerlessPlugin) {
 
     /**
      * Browserify
-     * - Options: babelify, transform, exclude, minify, ignore
+     * - Options: transform, exclude, minify, ignore
      */
 
     browserify() {
