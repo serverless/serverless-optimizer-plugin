@@ -203,7 +203,7 @@ module.exports = function(ServerlessPlugin) {
 
             // Minify browserified data
 
-            if (_this.function.custom.optimize && _this.function.custom.optimize.minify !== false) {
+            if (_this.config.minify !== false) {
 
               let result = UglifyJS.minify(_this.pathBundled, uglyOptions);
 
