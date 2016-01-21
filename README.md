@@ -26,7 +26,7 @@ npm install serverless-optimizer-plugin --save
 
 ```
 plugins: [
-    "serverless-plugin-optimizer"
+    "serverless-optimizer-plugin"
 ]
 ```
 
