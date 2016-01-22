@@ -59,6 +59,7 @@ Add the babelify transform to `s-component.json`:
     "runtime": "nodejs",
     "custom": {
         "optimize": {
+            "exclude": [ "aws-sdk" ],
             "transforms": [
                 {
                     "name": "babelify",
