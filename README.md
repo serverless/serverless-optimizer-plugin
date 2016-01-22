@@ -75,5 +75,4 @@ Add the babelify transform to `s-component.json`:
 
 ```
 
-
 We're currently working on adding support for Typsecript.  Check back for updates!
