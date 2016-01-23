@@ -78,7 +78,7 @@ module.exports = function(ServerlessPlugin) {
       }
 
       // Optimize: Nodejs
-      if (func.runtime === 'nodejs') {
+      if (component.runtime === 'nodejs') {
         optimizer = new OptimizeNodejs(this.S, evt, component, func);
         return optimizer.optimize()
           .then(function(evt) {
