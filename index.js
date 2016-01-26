@@ -59,7 +59,7 @@ module.exports = function(ServerlessPlugin) {
 
       // Validate: Check Serverless version
       if (parseInt(this.S._version.split('.')[1]) < 2) {
-        console.log("WARNING: This version of the Serverless Optimizer Plugin will not work with a version of Serverless that is less than v0.2");
+        console.log("WARNING: This version of the Serverless Optimizer Plugin will not work with a version of Serverless that is less than v0.2.");
       }
 
       // Get function
