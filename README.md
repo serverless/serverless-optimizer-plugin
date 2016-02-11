@@ -5,7 +5,7 @@ Browserifies, minifies your Serverless Node.js Functions on deployment, and more
 
 Reducing the file size of your AWS Lambda Functions allows AWS to provision them more quickly, speeding up the response time of your Lambdas.  Smaller Lambda sizes also helps you develop faster because you can upload them faster.  This Severless Plugin is absolutely recommended for every project including Lambdas with Node.js.
 
-**Note:** Requires Serverless *v0.1.0* or higher.
+**Note:** Requires Serverless *v0.4.0* or higher.
 
 ###Setup
 

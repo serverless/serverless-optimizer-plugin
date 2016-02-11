@@ -9,7 +9,6 @@ module.exports = function(ServerlessPlugin) {
   const path    = require('path'),
     _           = require('lodash'),
     fs          = require('fs'),
-    os          = require('os'),
     browserify  = require('browserify'),
     UglifyJS    = require('uglify-js'),
     wrench      = require('wrench'),
@@ -64,7 +63,7 @@ module.exports = function(ServerlessPlugin) {
 
       // Get function
       let func    = this.S.state.getFunctions({  paths: [evt.options.path] })[0],
-        component = this.S.state.getComponents({ component: func._config.component })[0],
+        component = func.getComponent(),
         optimizer;
 
       // Skip if no optimization is set on component OR function
