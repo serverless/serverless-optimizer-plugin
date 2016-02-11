@@ -116,7 +116,8 @@ module.exports = function(ServerlessPlugin) {
         plugins:      [],
         transforms:   [],
         exclude:      [],
-        ignore:       []
+        ignore:       [],
+        extensions:   []
       };
       _this.config = _.merge(
         _this.config,
@@ -148,6 +149,7 @@ module.exports = function(ServerlessPlugin) {
         basedir:          fs.realpathSync(_this.evt.data.pathDist),
         entries:          [_this.function.handler.split('.')[0] + '.' + _this.config.handlerExt],
         standalone:       'lambda',
+        extensions:       _this.config.extensions,
         browserField:     false,  // Setup for node app (copy logic of --node in bin/args.js)
         builtins:         false,
         commondir:        false,
