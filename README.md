@@ -18,14 +18,16 @@ npm install serverless-optimizer-plugin --save
 
 ```
 "custom": {
-	"optimize": true
+        "optimize": {
+            "exclude": [ "aws-sdk" ]
+      	}
 }
 ```
 
 * Add the plugin to the `plugins` array in your Serverless Project's `s-project.json`, like this:
 
 ```
-plugins: [
+"plugins": [
     "serverless-optimizer-plugin"
 ]
 ```
