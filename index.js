@@ -62,7 +62,7 @@ module.exports = function(ServerlessPlugin) {
       }
 
       // Get function
-      let func    = this.S.state.getFunctions({  paths: [evt.options.path] })[0],
+      let func    = this.S.getProject().getFunction( evt.options.path ),
         component = func.getComponent(),
         optimizer;
 
@@ -77,7 +77,7 @@ module.exports = function(ServerlessPlugin) {
       }
 
       // Optimize: Nodejs
-      if (component.runtime === 'nodejs') {
+      if (component.getRuntime().getName() === 'nodejs') {
         optimizer = new OptimizeNodejs(this.S, evt, component, func);
         return optimizer.optimize()
           .then(function(evt) {
@@ -254,30 +254,40 @@ module.exports = function(ServerlessPlugin) {
         compressPaths = [],
         ignore        = ['.DS_Store'],
         stats,
-        fullPath;
+        fullPath,
+        srcPath,
+        destPath,
+        destDirPath;
 
       // Skip if undefined
       if (!_this.config.includePaths) return compressPaths;
 
       // Collect includePaths
       _this.config.includePaths.forEach(p => {
+        if( p.src && p.dest ){
+          srcPath = p.src;
+          destPath = p.dest;
+          destDirPath = p.dest;
+        } else {
+          srcPath = p;
+          destPath = p;
+          destDirPath = path.basename( p );
+        }
 
         try {
-          fullPath = path.resolve(path.join(_this.evt.data.pathDist, p));
+          fullPath = path.resolve(path.join(_this.evt.data.pathDist, srcPath));
           stats = fs.lstatSync(fullPath);
         } catch (e) {
-          console.error('Cant find includePath ', p, e);
+          console.error('Cant find includePath ', srcPath, e);
           throw e;
         }
 
         if (stats.isFile()) {
           compressPaths.push({
-            name: p,
+            name: destPath,
             path: fullPath
           });
         } else if (stats.isDirectory()) {
-
-          let dirname = path.basename(p);
 
           wrench
             .readdirSyncRecursive(fullPath)
@@ -290,7 +300,7 @@ module.exports = function(ServerlessPlugin) {
 
               let filePath = [fullPath, file].join('/');
               if (fs.lstatSync(filePath).isFile()) {
-                let pathInZip = path.join(dirname, file);
+                let pathInZip = path.join(destDirPath, file);
                 compressPaths.push({
                   name: pathInZip,
                   path: filePath
