@@ -62,7 +62,7 @@ module.exports = function(ServerlessPlugin) {
       }
 
       // Get function
-      let func    = this.S.state.getFunctions({  paths: [evt.options.path] })[0],
+      let func    = this.S.getProject().getFunction( evt.options.path ),
         component = func.getComponent(),
         optimizer;
 
@@ -77,7 +77,7 @@ module.exports = function(ServerlessPlugin) {
       }
 
       // Optimize: Nodejs
-      if (component.runtime === 'nodejs') {
+      if (component.getRuntime().getName() === 'nodejs') {
         optimizer = new OptimizeNodejs(this.S, evt, component, func);
         return optimizer.optimize()
           .then(function(evt) {
