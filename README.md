@@ -34,6 +34,37 @@ plugins: [
 
 Adding the `custom.optimize` property in `s-component.json` applies the optimization setting to ALL functions in that component.  Adding the `custom.optimize` property to `s-function.json` applies the optimization setting to ONLY that specific function.  You can use `custom.optimize` in both places.  The `custom.optimize` setting in `s-function.json` will override the setting in `s-component.json`.
 
+## Coffeescript handlers with coffeeify
+
+You can write your lambda code in `handler.coffee` instead of `handler.js`
+
+
+Install coffeeify within the root context of your project:
+
+    npm install coffeeify --save
+
+
+Add the coffeeify transform to `s-component.json`:
+
+```javascript
+{
+    "name": "nodejscomponent",
+    "runtime": "nodejs",
+    "custom": {
+        "optimize": {
+            "exclude": [ "aws-sdk" ],
+      	    "handlerExt": "coffee",
+            "extensions": [".coffee"],
+            "transforms": [
+                {
+                    "name": "coffeeify"
+                }
+            ]
+        }
+    }
+}
+```
+
 
 ## ES6 with Babel and Babelify
 
