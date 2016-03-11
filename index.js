@@ -71,8 +71,55 @@ module.exports = function(ServerlessPlugin) {
         return BbPromise.resolve(evt);
       }
 
+      // Skip if disable is true in the component or function
+      if ((component.custom && component.custom.optimize && component.custom.optimize.disable) || (func.custom && func.custom.optimize && func.custom.optimize.disable)) {
+        return BbPromise.resolve(evt);
+      }
+
       // If optimize is set in component, but false in function, skip
       if (component.custom && component.custom.optimize && func.custom && func.custom.optimize === false) {
+        return BbPromise.resolve(evt);
+      }
+
+      // If component/function has an excludeStage value matching the current, skip
+      let excludeStage = [];
+      // Cycle through component/function and combine values
+      _.forEach([component, func], function(config) {
+        // If excludeStage was set
+        if (_.has(config, "custom.optimize.excludeStage")) {
+          // If excludeStage is a string or array, combine with exclude array. Function will overwrite component settings.
+          if (_.isString(config.custom.optimize.excludeStage) || _.isArray(config.custom.optimize.excludeStage)) {
+            excludeStage = _.concat([], config.custom.optimize.excludeStage);
+          }
+          // If excludeStage is bool and false, clear the array.
+          if (_.isBoolean(config.custom.optimize.excludeStage) && config.custom.optimize.excludeStage === false) {
+            excludeStage = [];
+          }          
+        }
+      })
+      // If current stage was excluded, skip
+      if (_.includes(excludeStage, evt.options.stage)) {
+        return BbPromise.resolve(evt);
+      }
+
+      // If component/function has an excludeRegion value matching the current, skip
+      let excludeRegion = [];
+      // Cycle through component/function and combine values
+      _.forEach([component, func], function(config) {
+        // If excludeRegion was set
+        if (_.has(config, "custom.optimize.excludeRegion")) {
+          // If excludeRegion is a string or array, combine with exclude array. Function will overwrite component settings.
+          if (_.isString(config.custom.optimize.excludeRegion) || _.isArray(config.custom.optimize.excludeRegion)) {
+            excludeRegion = _.concat([], config.custom.optimize.excludeRegion);
+          }
+          // If excludeRegion is bool and false, clear the array.
+          if (_.isBoolean(config.custom.optimize.excludeRegion) && config.custom.optimize.excludeRegion === false) {
+            excludeRegion = [];
+          }          
+        }
+      });
+      // If current region was excluded, skip
+      if (_.includes(excludeRegion, evt.options.region)) {
         return BbPromise.resolve(evt);
       }
 
