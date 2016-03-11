@@ -14,14 +14,6 @@ Reducing the file size of your AWS Lambda Functions allows AWS to provision them
 npm install serverless-optimizer-plugin --save
 ```
 
-* In the `custom` property of either your `s-component.json` or `s-function.json` add an optimize property.
-
-```
-"custom": {
-	"optimize": true
-}
-```
-
 * Add the plugin to the `plugins` array in your Serverless Project's `s-project.json`, like this:
 
 ```
@@ -30,10 +22,84 @@ plugins: [
 ]
 ```
 
+* In the `custom` property of either your `s-component.json` or `s-function.json` add a optimize property.
+
+```
+"custom": {
+    "optimize": true
+}
+```
+
+* If you rely on the **aws-sdk**, be sure to read the **Common Pitfalls** section. 
+
 * All done!
 
 Adding the `custom.optimize` property in `s-component.json` applies the optimization setting to ALL functions in that component.  Adding the `custom.optimize` property to `s-function.json` applies the optimization setting to ONLY that specific function.  You can use `custom.optimize` in both places.  The `custom.optimize` setting in `s-function.json` will override the setting in `s-component.json`.
 
+### Configuration Options
+
+Configuration options can be used by setting `optimize` to an object instead of a boolean value, within `s-component.json` or `s-function.json`. The following options are available:
+
+* **disable** - When set to `true`, this will disable optimizer. This is effectively the same as setting the `optimize` property to `false`, but it does not require the deletion of any other configuration values within the `optimize` object. This is a good option for temporarily disabling while debugging.
+
+```
+"custom": {
+    "optimize": {
+        "disable": true
+    }
+}
+```
+
+* **excludeStage** - When set to a `string` or `[string]`, optimizer will be disabled for the specified stage(s). This is beneficial if you do not want optimizer to run on a specific stage to aid in debugging. When specified in both `s-component.json` and `s-function.json`, the configuration for the function will be used.
+
+```
+"custom": {
+    "optimize": {
+        "excludeStage": ["dev", "test"]
+    }
+}
+```
+
+* **excludeRegion** - When set to a `string` or `[string]`, optimizer will be disabled for the specified region(s). When specified in both `s-component.json` and `s-function.json`, the configuration for the function will be used. 
+
+```
+"custom": {
+    "optimize": {
+        "excludeRegion": ["us-east-1"]
+    }
+}
+```
+
+### Browserify Options
+
+Browserify options can be included as normal configuration options to the `optimize` object within `s-component.json` or `s-function.json`. The following options are supported:
+
+* handlerExt
+* includePaths
+* requires
+* plugins
+* transforms
+* exclude
+* ignore
+* extensions
+
+For more information on these options, please visit the [Browserify Documentaton](https://github.com/substack/node-browserify#usage).
+
+### Common Pitfalls
+
+* **AWS-SDK** does not play well with Browserify. If the aws-sdk is used anywhere in your code, even if it is not within package.json, you may received the following error:
+
+`Uncaught {"errorMessage":"Cannot find module '/usr/lib/node_modules/aws-sdk/apis/metadata.json'"`
+
+Since the aws-sdk is always present within AWS Lambda, it does not need to be included with your other modules. To exclude this from optimizer, use the `exclude` configuration option within `s-component.json` or `s-function.json`.
+ 
+```
+"custom": {
+    "optimize": {
+        "exclude": ["aws-sdk"]
+    }
+}
+```
 
 ## ES6 with Babel and Babelify
 
@@ -76,4 +142,4 @@ Add the babelify transform to `s-component.json`:
 
 ```
 
-We're currently working on adding support for Typsecript.  Check back for updates!
+We're currently working on adding support for Typescript. Check back for updates!
