@@ -63,70 +63,64 @@ module.exports = function(ServerlessPlugin) {
       }
 
       // Get function
-      let func    = this.S.state.getFunctions({  paths: [evt.options.path] })[0],
-        component = func.getComponent(),
+      let func    = this.S.getProject().getFunction(evt.options.name),
         optimizer;
 
-      // Skip if no optimization is set on component OR function
-      if ((!component.custom || !component.custom.optimize) && (!func.custom || !func.custom.optimize)) {
+      // Skip if no optimization is set on function
+      if (!func.custom || !func.custom.optimize) {
         return BbPromise.resolve(evt);
       }
 
-      // Skip if disable is true in the component or function
-      if ((component.custom && component.custom.optimize && component.custom.optimize.disable) || (func.custom && func.custom.optimize && func.custom.optimize.disable)) {
-        return BbPromise.resolve(evt);
-      }
-
-      // If optimize is set in component, but false in function, skip
-      if (component.custom && component.custom.optimize && func.custom && func.custom.optimize === false) {
+      // Skip if disable is true in function
+      if (func.custom && func.custom.optimize && func.custom.optimize.disable) {
         return BbPromise.resolve(evt);
       }
 
       // If component/function has an excludeStage value matching the current, skip
       let excludeStage = [];
-      // Cycle through component/function and combine values
-      _.forEach([component, func], function(config) {
-        // If excludeStage was set
-        if (_.has(config, "custom.optimize.excludeStage")) {
-          // If excludeStage is a string or array, combine with exclude array. Function will overwrite component settings.
-          if (_.isString(config.custom.optimize.excludeStage) || _.isArray(config.custom.optimize.excludeStage)) {
-            excludeStage = _.concat([], config.custom.optimize.excludeStage);
-          }
-          // If excludeStage is bool and false, clear the array.
-          if (_.isBoolean(config.custom.optimize.excludeStage) && config.custom.optimize.excludeStage === false) {
-            excludeStage = [];
-          }          
+
+      // Cycle through function and combine values
+
+      // If excludeStage was set
+      if (_.has(func, "custom.optimize.excludeStage")) {
+        // If excludeStage is a string or array, combine with exclude array. Function will overwrite component settings.
+        if (_.isString(func.custom.optimize.excludeStage) || _.isArray(func.custom.optimize.excludeStage)) {
+          excludeStage = _.concat([], func.custom.optimize.excludeStage);
         }
-      })
+        // If excludeStage is bool and false, clear the array.
+        if (_.isBoolean(func.custom.optimize.excludeStage) && func.custom.optimize.excludeStage === false) {
+          excludeStage = [];
+        }
+      }
+
       // If current stage was excluded, skip
       if (_.includes(excludeStage, evt.options.stage)) {
         return BbPromise.resolve(evt);
       }
 
-      // If component/function has an excludeRegion value matching the current, skip
+      // If function has an excludeRegion value matching the current, skip
       let excludeRegion = [];
-      // Cycle through component/function and combine values
-      _.forEach([component, func], function(config) {
-        // If excludeRegion was set
-        if (_.has(config, "custom.optimize.excludeRegion")) {
-          // If excludeRegion is a string or array, combine with exclude array. Function will overwrite component settings.
-          if (_.isString(config.custom.optimize.excludeRegion) || _.isArray(config.custom.optimize.excludeRegion)) {
-            excludeRegion = _.concat([], config.custom.optimize.excludeRegion);
-          }
-          // If excludeRegion is bool and false, clear the array.
-          if (_.isBoolean(config.custom.optimize.excludeRegion) && config.custom.optimize.excludeRegion === false) {
-            excludeRegion = [];
-          }          
+
+      // If excludeRegion was set
+      if (_.has(func, "custom.optimize.excludeRegion")) {
+        // If excludeRegion is a string or array, combine with exclude array. Function will overwrite component settings.
+        if (_.isString(func.custom.optimize.excludeRegion) || _.isArray(func.custom.optimize.excludeRegion)) {
+          excludeRegion = _.concat([], func.custom.optimize.excludeRegion);
         }
-      });
+        // If excludeRegion is bool and false, clear the array.
+        if (_.isBoolean(func.custom.optimize.excludeRegion) && func.custom.optimize.excludeRegion === false) {
+          excludeRegion = [];
+        }
+      }
+
       // If current region was excluded, skip
       if (_.includes(excludeRegion, evt.options.region)) {
         return BbPromise.resolve(evt);
       }
 
       // Optimize: Nodejs
-      if (component.runtime === 'nodejs') {
-        optimizer = new OptimizeNodejs(this.S, evt, component, func);
+      if (func.getRuntime().getName() === 'nodejs') {
+        optimizer = new OptimizeNodejs(this.S, evt, func);
         return optimizer.optimize()
           .then(function(evt) {
             return evt;
@@ -145,10 +139,9 @@ module.exports = function(ServerlessPlugin) {
 
   class OptimizeNodejs {
 
-    constructor(S, evt, component, func) {
+    constructor(S, evt, func) {
       this.S          = S;
       this.evt        = evt;
-      this.component  = component;
       this.function   = func;
     }
 
@@ -168,7 +161,6 @@ module.exports = function(ServerlessPlugin) {
       };
       _this.config = _.merge(
         _this.config,
-        _this.component.custom.optimize ? _this.component.custom.optimize === true ? {} : _this.component.custom.optimize : {},
         _this.function.custom.optimize ? _this.function.custom.optimize === true ? {} : _this.function.custom.optimize : {}
       );
 
@@ -191,10 +183,11 @@ module.exports = function(ServerlessPlugin) {
         mangle:   true, // @see http://lisperator.net/uglifyjs/compress
         compress: {}
       };
+      const handlerName = this.function.getRuntime().getHandler(this.function);
 
       let b = browserify({
         basedir:          fs.realpathSync(_this.evt.data.pathDist),
-        entries:          [_this.function.handler.split('.')[0] + '.' + _this.config.handlerExt],
+        entries:          [handlerName.split('.')[0] + '.' + _this.config.handlerExt],
         standalone:       'lambda',
         extensions:       _this.config.extensions,
         browserField:     false,  // Setup for node app (copy logic of --node in bin/args.js)
@@ -271,18 +264,13 @@ module.exports = function(ServerlessPlugin) {
           // Save final optimized path
           _this.pathOptimized = pathOptimized;
 
-          let envData       = fs.readFileSync(path.join(_this.evt.data.pathDist, '.env')),
-            handlerFileName = _this.function.handler.split('.')[0];
+          let handlerFileName = _this.function.getRuntime().getHandler(_this.function).split('.')[0];
 
           // Reassign pathsPackages property
           _this.evt.data.pathsPackaged = [
             {
               name: handlerFileName + '.js',
               path: _this.pathOptimized
-            },
-            {
-              name: '.env',
-              path: path.join(_this.evt.data.pathDist, '.env')
             }
           ];
 
