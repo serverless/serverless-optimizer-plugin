@@ -22,7 +22,7 @@ plugins: [
 ]
 ```
 
-* In the `custom` property of either your `s-component.json` or `s-function.json` add a optimize property.
+* In the `custom` property of either your `s-component.json` or `s-function.json` add an optimize property.
 
 ```
 "custom": {
@@ -38,7 +38,7 @@ Adding the `custom.optimize` property in `s-component.json` applies the optimiza
 
 ### Configuration Options
 
-Configuration options can be used by setting `optimize` to an object instead of a boolean value, within `s-component.json` or `s-function.json`. The following options are available:
+Configuration options can be used by setting the `optimize` property to an object instead of a boolean value. The following options are available:
 
 * **disable** - When set to `true`, this will disable optimizer. This is effectively the same as setting the `optimize` property to `false`, but it does not require the deletion of any other configuration values within the `optimize` object. This is a good option for temporarily disabling while debugging.
 
@@ -50,7 +50,7 @@ Configuration options can be used by setting `optimize` to an object instead of 
 }
 ```
 
-* **excludeStage** - When set to a `string` or `[string]`, optimizer will be disabled for the specified stage(s). This is beneficial if you do not want optimizer to run on a specific stage to aid in debugging. When specified in both `s-component.json` and `s-function.json`, the configuration for the function will be used.
+* **excludeStage** - When set to a `string` or `[string]`, optimizer will be disabled for the specified stage(s). This is beneficial if you do not want optimizer to run on a specific stage to aid in debugging.
 
 ```
 "custom": {
@@ -60,7 +60,7 @@ Configuration options can be used by setting `optimize` to an object instead of 
 }
 ```
 
-* **excludeRegion** - When set to a `string` or `[string]`, optimizer will be disabled for the specified region(s). When specified in both `s-component.json` and `s-function.json`, the configuration for the function will be used. 
+* **excludeRegion** - When set to a `string` or `[string]`, optimizer will be disabled for the specified region(s). 
 
 ```
 "custom": {
@@ -72,7 +72,7 @@ Configuration options can be used by setting `optimize` to an object instead of 
 
 ### Browserify Options
 
-Browserify options can be included as normal configuration options to the `optimize` object within `s-component.json` or `s-function.json`. The following options are supported:
+Browserify options can be included as normal configuration options to the `optimize` object. The following options are supported:
 
 * handlerExt
 * includePaths
@@ -87,12 +87,12 @@ For more information on these options, please visit the [Browserify Documentaton
 
 ### Common Pitfalls
 
-* **AWS-SDK** does not play well with Browserify. If the aws-sdk is used anywhere in your code, even if it is not within package.json, you may received the following error:
+* **aws-sdk** does not play well with Browserify. If the aws-sdk is used anywhere in your code, even if it is not within node_modules or package.json, you may receive an error similar to:
 
-`Uncaught {"errorMessage":"Cannot find module '/usr/lib/node_modules/aws-sdk/apis/metadata.json'"`
+`Uncaught {"errorMessage":"Cannot find module '/usr/lib/node_modules/aws-sdk/apis/metadata.json'"...`
 
-Since the aws-sdk is always present within AWS Lambda, it does not need to be included with your other modules. To exclude this from optimizer, use the `exclude` configuration option within `s-component.json` or `s-function.json`.
- 
+To fix this, the aws-sdk should be excluded by using the `exclude` Browserify option. Since the aws-sdk is always available to an AWS Lambda, it should never need to be included.
+
 ```
 "custom": {
     "optimize": {
