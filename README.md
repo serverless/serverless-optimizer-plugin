@@ -5,7 +5,7 @@ Browserifies, minifies your Serverless Node.js Functions on deployment, and more
 
 Reducing the file size of your AWS Lambda Functions allows AWS to provision them more quickly, speeding up the response time of your Lambdas.  Smaller Lambda sizes also helps you develop faster because you can upload them faster.  This Severless Plugin is absolutely recommended for every project including Lambdas with Node.js.
 
-**Note:** Requires Serverless *v0.4.0* or higher.
+**Note:** Requires Serverless *v0.5.0* or higher.
 
 ###Setup
 
@@ -22,7 +22,7 @@ plugins: [
 ]
 ```
 
-* In the `custom` property of either your `s-component.json` or `s-function.json` add an optimize property.
+* In the `custom` property of your `s-function.json` add an optimize property.
 
 ```
 "custom": {
@@ -30,11 +30,9 @@ plugins: [
 }
 ```
 
-* If you rely on the **aws-sdk**, be sure to read the **Common Pitfalls** section. 
+* If you rely on the **aws-sdk**, be sure to read the **Common Pitfalls** section.
 
 * All done!
-
-Adding the `custom.optimize` property in `s-component.json` applies the optimization setting to ALL functions in that component.  Adding the `custom.optimize` property to `s-function.json` applies the optimization setting to ONLY that specific function.  You can use `custom.optimize` in both places.  The `custom.optimize` setting in `s-function.json` will override the setting in `s-component.json`.
 
 ### Configuration Options
 
@@ -60,7 +58,7 @@ Configuration options can be used by setting the `optimize` property to an objec
 }
 ```
 
-* **excludeRegion** - When set to a `string` or `[string]`, optimizer will be disabled for the specified region(s). 
+* **excludeRegion** - When set to a `string` or `[string]`, optimizer will be disabled for the specified region(s).
 
 ```
 "custom": {
@@ -110,18 +108,14 @@ Install babelify within the root context of your project:
 
     npm install babelify --save
 
-
-Assuming you have a node component called "nodejscomponent", install any babelify presets within the context of that component:
-
-
-    cd nodejscomponent && npm install babel-preset-es2015 --save
+    npm install babel-preset-es2015 --save
 
 
-Add the babelify transform to `s-component.json`:
+Add the babelify transform to `s-function.json`:
 
 ```javascript
 {
-    "name": "nodejscomponent",
+    "name": "myfunc",
     "runtime": "nodejs",
     "custom": {
         "optimize": {
