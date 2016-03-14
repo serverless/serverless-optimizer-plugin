@@ -53,7 +53,7 @@ Add the coffeeify transform to `s-component.json`:
     "custom": {
         "optimize": {
             "exclude": [ "aws-sdk" ],
-      	    "handlerExt": "coffee",
+            "handlerExt": "coffee",
             "extensions": [".coffee"],
             "transforms": [
                 {
