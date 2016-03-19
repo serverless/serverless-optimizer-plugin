@@ -267,9 +267,12 @@ module.exports = function(S) {
 
           if (includePaths && includePaths.length) {
             includePaths.forEach(function(p) {
+
+              // TODO:  path.join(_this.optimizedDistPath, p) must be created here before files can be copied over
+
               wrench.copyDirSyncRecursive(
                 path.join(_this.evt.options.pathDist, p),
-                path.join(_this.optimizedDistPath)
+                path.join(_this.optimizedDistPath, p)
               );
             });
           }
