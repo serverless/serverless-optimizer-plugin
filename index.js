@@ -232,10 +232,10 @@ module.exports = function(S) {
         b.bundle(function (err, bundledBuf) {
 
           // Reset pathDist
-          _this.evt.options.pathDist = path.join(_this.evt.options.pathDist, 'optimized');
+          _this.optimizedDistPath = path.join(_this.evt.options.pathDist, 'optimized');
 
           // Set path of optimized file
-          let optimizedFile = path.join(_this.evt.options.pathDist, _this.function.getHandler().split('.')[0] + '.js');
+          let optimizedFile = path.join(_this.optimizedDistPath, _this.function.getHandler().split('.')[0] + '.js');
 
           if (err) {
             console.error('Error running browserify bundle');
@@ -263,7 +263,18 @@ module.exports = function(S) {
       })
         .then(optimizedFile => {
 
-          // TODO: Bring back includePaths
+          let includePaths = _this.function.custom.optimize.includePaths;
+
+          if (includePaths && includePaths.length) {
+            includePaths.forEach(function(p) {
+              wrench.copyDirSyncRecursive(
+                path.join(_this.evt.options.pathDist, p),
+                path.join(_this.optimizedDistPath)
+              );
+            });
+          }
+
+          _this.evt.options.pathDist = _this.optimizedDistPath;
 
         });
     }
