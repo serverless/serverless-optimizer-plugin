@@ -227,33 +227,33 @@ module.exports = function(S) {
       _this.config.ignore.forEach(file => b.ignore(file));
 
       // Perform Bundle
-      _this.pathBundled   = path.join(_this.evt.options.pathDist, 'optimized', 'bundled.js');   // Save for auditing
-      _this.pathMinified  = path.join(_this.evt.options.pathDist, 'optimized', 'minified.js');  // Save for auditing
-
       return new BbPromise(function (resolve, reject) {
 
         b.bundle(function (err, bundledBuf) {
+
+          let mainPath = path.join(_this.evt.options.pathDist, 'optimized', _this.function.getHandler().split('.')[0] + '.js');
 
           if (err) {
             console.error('Error running browserify bundle');
             reject(err);
           } else {
 
-            S.utils.writeFileSync(_this.pathBundled, bundledBuf);
+            S.utils.writeFileSync(
+              mainPath,
+              bundledBuf);
 
             // Minify browserified data
-
             if (_this.config.minify !== false) {
 
-              let result = UglifyJS.minify(_this.pathBundled, uglyOptions);
+              let result = UglifyJS.minify(mainPath, uglyOptions);
 
               if (!result || !result.code) return reject(new SError('Problem uglifying code'));
 
-              S.utils.writeFileSync(_this.pathMinified, result.code);
+              S.utils.writeFileSync(mainPath, result.code);
 
-              resolve(_this.pathMinified);
+              resolve(mainPath);
             } else {
-              resolve(_this.pathBundled);
+              resolve(mainPath);
             }
           }
         });
