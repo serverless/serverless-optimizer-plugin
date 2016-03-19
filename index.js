@@ -4,7 +4,7 @@
  * Serverless Optimizer Plugin
  */
 
-module.exports = function(ServerlessPlugin) {
+module.exports = function(S) {
 
   const path    = require('path'),
     _           = require('lodash'),
@@ -18,14 +18,14 @@ module.exports = function(ServerlessPlugin) {
    * ServerlessOptimizer
    */
 
-  class ServerlessOptimizer extends ServerlessPlugin {
+  class ServerlessOptimizer extends S.classes.Plugin {
 
     /**
      * Constructor
      */
 
-    constructor(S) {
-      super(S);
+    constructor() {
+      super();
     }
 
     /**
@@ -42,9 +42,9 @@ module.exports = function(ServerlessPlugin) {
 
     registerHooks() {
 
-      this.S.addHook(this._optimize.bind(this), {
-        action: 'codePackageLambda',
-        event: 'post'
+      S.addHook(this._optimize.bind(this), {
+        action: 'codeDeployLambda',
+        event: 'pre'
       });
 
       return BbPromise.resolve();
@@ -58,12 +58,12 @@ module.exports = function(ServerlessPlugin) {
 
       // Validate: Check Serverless version
       // TODO: Use a full x.x.x version string. Consider using semver: https://github.com/npm/node-semver
-      if (parseInt(this.S._version.split('.')[1]) < 4) {
-        console.log("WARNING: This version of the Serverless Optimizer Plugin will not work with a version of Serverless that is less than v0.2.");
+      if (parseInt(S._version.split('.')[1]) < 5) {
+        console.log("WARNING: This version of the Serverless Optimizer Plugin will not work with a version of Serverless that is less than v0.5");
       }
 
       // Get function
-      let func    = this.S.getProject().getFunction(evt.options.name),
+      let func    = S.getProject().getFunction(evt.options.name),
         optimizer;
 
       // Skip if no optimization is set on function
@@ -120,7 +120,7 @@ module.exports = function(ServerlessPlugin) {
 
       // Optimize: Nodejs
       if (func.getRuntime().getName() === 'nodejs') {
-        optimizer = new OptimizeNodejs(this.S, evt, func);
+        optimizer = new OptimizeNodejs(S, evt, func);
         return optimizer.optimize()
           .then(function(evt) {
             return evt;
@@ -140,7 +140,6 @@ module.exports = function(ServerlessPlugin) {
   class OptimizeNodejs {
 
     constructor(S, evt, func) {
-      this.S          = S;
       this.evt        = evt;
       this.function   = func;
     }
@@ -183,10 +182,10 @@ module.exports = function(ServerlessPlugin) {
         mangle:   true, // @see http://lisperator.net/uglifyjs/compress
         compress: {}
       };
-      const handlerName = this.function.getRuntime().getHandler(this.function);
+      const handlerName = this.function.getHandler();
 
       let b = browserify({
-        basedir:          fs.realpathSync(_this.evt.data.pathDist),
+        basedir:          fs.realpathSync(_this.evt.options.pathDist),
         entries:          [handlerName.split('.')[0] + '.' + _this.config.handlerExt],
         standalone:       'lambda',
         extensions:       _this.config.extensions,
@@ -228,8 +227,8 @@ module.exports = function(ServerlessPlugin) {
       _this.config.ignore.forEach(file => b.ignore(file));
 
       // Perform Bundle
-      _this.pathBundled   = path.join(_this.evt.data.pathDist, 'bundled.js');   // Save for auditing
-      _this.pathMinified  = path.join(_this.evt.data.pathDist, 'minified.js');  // Save for auditing
+      _this.pathBundled   = path.join(_this.evt.options.pathDist, 'optimized', 'bundled.js');   // Save for auditing
+      _this.pathMinified  = path.join(_this.evt.options.pathDist, 'optimized', 'minified.js');  // Save for auditing
 
       return new BbPromise(function (resolve, reject) {
 
@@ -240,7 +239,7 @@ module.exports = function(ServerlessPlugin) {
             reject(err);
           } else {
 
-            fs.writeFileSync(_this.pathBundled, bundledBuf);
+            S.utils.writeFileSync(_this.pathBundled, bundledBuf);
 
             // Minify browserified data
 
@@ -250,7 +249,7 @@ module.exports = function(ServerlessPlugin) {
 
               if (!result || !result.code) return reject(new SError('Problem uglifying code'));
 
-              fs.writeFileSync(_this.pathMinified, result.code);
+              S.utils.writeFileSync(_this.pathMinified, result.code);
 
               resolve(_this.pathMinified);
             } else {
@@ -262,81 +261,11 @@ module.exports = function(ServerlessPlugin) {
         .then(pathOptimized => {
 
           // Save final optimized path
-          _this.pathOptimized = pathOptimized;
+          _this.evt.options.pathDist = path.dirname(pathOptimized);
 
-          let handlerFileName = _this.function.getRuntime().getHandler(_this.function).split('.')[0];
+        // TODO: Bring back includePaths
 
-          // Reassign pathsPackages property
-          _this.evt.data.pathsPackaged = [
-            {
-              name: handlerFileName + '.js',
-              path: _this.pathOptimized
-            }
-          ];
-
-          // Reassign pathsPackages property
-          _this.evt.data.pathsPackaged = _this.evt.data.pathsPackaged.concat(_this._generateIncludePaths());
         });
-    }
-
-    /**
-     * Generate Include Paths
-     * - If function.custom.includePaths are specified, include them
-     */
-
-    _generateIncludePaths() {
-
-      let _this       = this,
-        compressPaths = [],
-        ignore        = ['.DS_Store'],
-        stats,
-        fullPath;
-
-      // Skip if undefined
-      if (!_this.config.includePaths) return compressPaths;
-
-      // Collect includePaths
-      _this.config.includePaths.forEach(p => {
-
-        try {
-          fullPath = path.resolve(path.join(_this.evt.data.pathDist, p));
-          stats = fs.lstatSync(fullPath);
-        } catch (e) {
-          console.error('Cant find includePath ', p, e);
-          throw e;
-        }
-
-        if (stats.isFile()) {
-          compressPaths.push({
-            name: p,
-            path: fullPath
-          });
-        } else if (stats.isDirectory()) {
-
-          let dirname = path.basename(p);
-
-          wrench
-            .readdirSyncRecursive(fullPath)
-            .forEach(file => {
-
-              // Ignore certain files
-              for (let i = 0; i < ignore.length; i++) {
-                if (file.toLowerCase().indexOf(ignore[i]) > -1) return;
-              }
-
-              let filePath = [fullPath, file].join('/');
-              if (fs.lstatSync(filePath).isFile()) {
-                let pathInZip = path.join(dirname, file);
-                compressPaths.push({
-                  name: pathInZip,
-                  path: filePath
-                });
-              }
-            });
-        }
-      });
-
-      return compressPaths;
     }
   }
 
