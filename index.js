@@ -235,7 +235,7 @@ module.exports = function(S) {
           _this.evt.options.pathDist = path.join(_this.evt.options.pathDist, 'optimized');
 
           // Set path of optimized file
-          let mainPath = path.join(_this.evt.options.pathDist, _this.function.getHandler().split('.')[0] + '.js');
+          let optimizedFile = path.join(_this.evt.options.pathDist, _this.function.getHandler().split('.')[0] + '.js');
 
           if (err) {
             console.error('Error running browserify bundle');
@@ -243,28 +243,26 @@ module.exports = function(S) {
           } else {
 
             // Write bundled file
-            S.utils.writeFileSync(mainPath, bundledBuf);
+            S.utils.writeFileSync(optimizedFile, bundledBuf);
 
             // Minify browserified data
             if (_this.config.minify !== false) {
 
-              let result = UglifyJS.minify(mainPath, uglyOptions);
+              let result = UglifyJS.minify(optimizedFile, uglyOptions);
 
               if (!result || !result.code) return reject(new SError('Problem uglifying code'));
 
-              S.utils.writeFileSync(mainPath, result.code);
+              S.utils.writeFileSync(optimizedFile, result.code);
 
-              resolve(mainPath);
+              resolve(optimizedFile);
             } else {
-              resolve(mainPath);
+              resolve(optimizedFile);
             }
           }
         });
       })
-        .then(pathOptimized => {
+        .then(optimizedFile => {
 
-          // Save final optimized path
-          console.log(_this.evt.options.pathDist)
           // TODO: Bring back includePaths
 
         });
