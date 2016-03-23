@@ -1,6 +1,6 @@
 Serverless Optimizer Plugin
 =============================
-[![serverless](http://public.serverless.com/badges/v1.svg)](http://www.serverless.com)
+[![serverless](http://public.serverless.com/badges/v3.svg)](http://www.serverless.com)
 
 Browserifies, minifies your Serverless Node.js Functions on deployment, and more!
 
