@@ -6,13 +6,13 @@
 
 module.exports = function(S) {
 
-  const path    = require('path'),
-    _           = require('lodash'),
-    fs          = require('fs'),
-    browserify  = require('browserify'),
-    UglifyJS    = require('uglify-js'),
-    wrench      = require('wrench'),
-    BbPromise   = require('bluebird');
+  const path       = require('path'),
+        _          = require('lodash'),
+        fs         = require('fs'),
+        browserify = require('browserify'),
+        UglifyJS   = require('uglify-js'),
+        wrench     = require('wrench'),
+        BbPromise  = require('bluebird');
 
   /**
    * ServerlessOptimizer
@@ -44,7 +44,7 @@ module.exports = function(S) {
 
       S.addHook(this._optimize.bind(this), {
         action: 'codeDeployLambda',
-        event: 'pre'
+        event:  'pre'
       });
 
       return BbPromise.resolve();
@@ -63,8 +63,8 @@ module.exports = function(S) {
       }
 
       // Get function
-      let func    = S.getProject().getFunction(evt.options.name),
-        optimizer;
+      let func = S.getProject().getFunction(evt.options.name),
+          optimizer;
 
       // Skip if no optimization is set on function
       if (!func.custom || !func.custom.optimize) {
@@ -140,8 +140,8 @@ module.exports = function(S) {
   class OptimizeNodejs {
 
     constructor(S, evt, func) {
-      this.evt        = evt;
-      this.function   = func;
+      this.evt      = evt;
+      this.function = func;
     }
 
     optimize() {
@@ -177,8 +177,8 @@ module.exports = function(S) {
 
     browserify() {
 
-      let _this       = this;
-      let uglyOptions = {
+      let _this         = this;
+      let uglyOptions   = {
         mangle:   true, // @see http://lisperator.net/uglifyjs/compress
         compress: {}
       };
@@ -197,7 +197,7 @@ module.exports = function(S) {
         insertGlobalVars: {      // Handle process https://github.com/substack/node-browserify/issues/1277
           //__filename: insertGlobals.lets.__filename,
           //__dirname: insertGlobals.lets.__dirname,
-          process: function () {
+          process: function() {
           }
         }
       });
@@ -227,9 +227,9 @@ module.exports = function(S) {
       _this.config.ignore.forEach(file => b.ignore(file));
 
       // Perform Bundle
-      return new BbPromise(function (resolve, reject) {
+      return new BbPromise(function(resolve, reject) {
 
-        b.bundle(function (err, bundledBuf) {
+        b.bundle(function(err, bundledBuf) {
 
           // Reset pathDist
           _this.optimizedDistPath = path.join(_this.evt.options.pathDist, 'optimized');
@@ -267,14 +267,20 @@ module.exports = function(S) {
 
           if (includePaths && includePaths.length) {
             includePaths.forEach(function(p) {
+              let destPath = path.join(_this.optimizedDistPath, p);
 
-              wrench.mkdirSyncRecursive(path.join(_this.optimizedDistPath, p), '0777');
-              wrench.copyDirSyncRecursive(
+              if (fs.lstatSync(p).isDirectory()) {
+                wrench.mkdirSyncRecursive(destPath, '0777');
+                wrench.copyDirSyncRecursive(
                   path.join(_this.evt.options.pathDist, p),
-                  path.join(_this.optimizedDistPath, p), {
-                      forceDelete: true
+                  destPath, {
+                    forceDelete: true
                   }
-              );
+                );
+              } else {
+                wrench.mkdirSyncRecursive(path.dirname(destPath), '0777');
+                S.utils.writeFileSync(destPath, S.utils.readFileSync(p));
+              }
             });
           }
 
