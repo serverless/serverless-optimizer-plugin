@@ -270,10 +270,10 @@ module.exports = function(S) {
 
               if (fs.lstatSync(p).isDirectory()) {
                 fs.mkdirsSync(destPath, '0777');
-                fs.copySync(path.join(_this.evt.options.pathDist, p),destPath,{clobber:true,dereference:true});
+                fs.copySync(path.join(_this.evt.options.pathDist, p), destPath, {clobber: true, dereference: true});
               } else {
                 fs.mkdirsSync(path.dirname(destPath), '0777');
-                fs.copySync(p,destPath,{clobber:true,dereference:true});
+                fs.copySync(p, destPath, {clobber: true, dereference: true});
               }
             });
           }
