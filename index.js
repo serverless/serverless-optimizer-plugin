@@ -8,10 +8,9 @@ module.exports = function(S) {
 
   const path       = require('path'),
         _          = require('lodash'),
-        fs         = require('fs'),
+        fs         = require('fs-extra'),
         browserify = require('browserify'),
         UglifyJS   = require('uglify-js'),
-        wrench     = require('wrench'),
         BbPromise  = require('bluebird');
 
   /**
@@ -270,16 +269,11 @@ module.exports = function(S) {
               let destPath = path.join(_this.optimizedDistPath, p);
 
               if (fs.lstatSync(p).isDirectory()) {
-                wrench.mkdirSyncRecursive(destPath, '0777');
-                wrench.copyDirSyncRecursive(
-                  path.join(_this.evt.options.pathDist, p),
-                  destPath, {
-                    forceDelete: true
-                  }
-                );
+                fs.mkdirsSync(destPath, '0777');
+                fs.copySync(path.join(_this.evt.options.pathDist, p), destPath, {clobber: true, dereference: true});
               } else {
-                wrench.mkdirSyncRecursive(path.dirname(destPath), '0777');
-                S.utils.writeFileSync(destPath, S.utils.readFileSync(p));
+                fs.mkdirsSync(path.dirname(destPath), '0777');
+                fs.copySync(p, destPath, {clobber: true, dereference: true});
               }
             });
           }

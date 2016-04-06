@@ -1,6 +1,6 @@
 {
   "name": "serverless-optimizer-plugin",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "engines": {
     "node": ">=4.0"
   },
@@ -41,6 +41,6 @@
     "browserify": "^13.0.0",
     "lodash": "^4.0.0",
     "uglify-js": "^2.6.1",
-    "wrench": "^1.5.8"
+    "fs-extra": "~0.26.7"
   }
 }
