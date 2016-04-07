@@ -1,6 +1,6 @@
 {
   "name": "serverless-optimizer-plugin",
-  "version": "2.1.1",
+  "version": "2.2.0",
   "engines": {
     "node": ">=4.0"
   },
