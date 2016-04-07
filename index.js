@@ -118,7 +118,7 @@ module.exports = function(S) {
       }
 
       // Optimize: Nodejs
-      if (func.getRuntime().getName() === 'nodejs') {
+      if (func.getRuntime().getName() === 'nodejs' || func.getRuntime().getName() === 'nodejs4.3') {
         optimizer = new OptimizeNodejs(S, evt, func);
         return optimizer.optimize()
           .then(function(evt) {
