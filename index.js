@@ -8,10 +8,10 @@ module.exports = function(S) {
 
   const path       = require('path'),
         _          = require('lodash'),
-        fs         = require('fs-extra'),
         browserify = require('browserify'),
         UglifyJS   = require('uglify-js'),
-        BbPromise  = require('bluebird');
+        BbPromise  = require('bluebird'),
+        fs         = BbPromise.promisifyAll(require("fs-extra"));
 
   /**
    * ServerlessOptimizer
@@ -262,24 +262,23 @@ module.exports = function(S) {
       })
         .then(optimizedFile => {
 
-          let includePaths = _this.function.custom.optimize.includePaths;
+          let includePaths   = _this.function.custom.optimize.includePaths || [],
+              deferredCopies = [];
 
-          if (includePaths && includePaths.length) {
-            includePaths.forEach(function(p) {
-              let destPath = path.join(_this.optimizedDistPath, p);
+          includePaths.forEach(function(p) {
+            let destPath = path.join(_this.optimizedDistPath, p),
+                srcPath  = path.join(_this.evt.options.pathDist, p),
+                destDir  = (fs.lstatSync(p).isDirectory()) ? destPath : path.dirname(destPath);
 
-              if (fs.lstatSync(p).isDirectory()) {
-                fs.mkdirsSync(destPath, '0777');
-                fs.copySync(path.join(_this.evt.options.pathDist, p), destPath, {clobber: true, dereference: true});
-              } else {
-                fs.mkdirsSync(path.dirname(destPath), '0777');
-                fs.copySync(p, destPath, {clobber: true, dereference: true});
-              }
-            });
-          }
+            fs.mkdirsSync(destDir, '0777');
+            deferredCopies.push(
+              fs.copyAsync(srcPath, destPath, {clobber: true, dereference: true})
+            );
+          });
 
           _this.evt.options.pathDist = _this.optimizedDistPath;
 
+          return BbPromise.all(deferredCopies);
         });
     }
   }
