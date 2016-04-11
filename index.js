@@ -118,7 +118,9 @@ module.exports = function(S) {
       }
 
       // Optimize: Nodejs
-      if (-1 !== func.getRuntime().getName().indexOf('nodejs')) {
+      let runtimeName = func.getRuntime().getName();
+      if (-1 !== runtimeName.indexOf('nodejs')) {
+        S.utils.sDebug(`Beginning optimization. Runtime: ${runtimeName}`);
         optimizer = new OptimizeNodejs(S, evt, func);
         return optimizer.optimize()
           .then(function(evt) {
@@ -162,9 +164,8 @@ module.exports = function(S) {
         _this.function.custom.optimize ? _this.function.custom.optimize === true ? {} : _this.function.custom.optimize : {}
       );
 
-      // Browserify
       return _this.browserify()
-        .then(function() {
+        .then(() => {
           return _this.evt;
         });
     }
@@ -176,16 +177,19 @@ module.exports = function(S) {
 
     browserify() {
 
-      let _this         = this;
-      let uglyOptions   = {
-        mangle:   true, // @see http://lisperator.net/uglifyjs/compress
-        compress: {}
-      };
-      const handlerName = this.function.getHandler();
+      let _this       = this,
+          uglyOptions = {
+            mangle:   true, //@see http://lisperator.net/uglifyjs/compress
+            compress: {}
+          };
+
+      const handlerName   = this.function.getHandler(),
+            bundleBaseDir = fs.realpathSync(_this.evt.options.pathDist),
+            bundleEntryPt = handlerName.split('.')[0] + '.' + _this.config.handlerExt;
 
       let b = browserify({
-        basedir:          fs.realpathSync(_this.evt.options.pathDist),
-        entries:          [handlerName.split('.')[0] + '.' + _this.config.handlerExt],
+        basedir:          bundleBaseDir,
+        entries:          [bundleEntryPt],
         standalone:       'lambda',
         extensions:       _this.config.extensions,
         browserField:     false,  // Setup for node app (copy logic of --node in bin/args.js)
@@ -226,12 +230,15 @@ module.exports = function(S) {
       _this.config.ignore.forEach(file => b.ignore(file));
 
       // Perform Bundle
-      return new BbPromise(function(resolve, reject) {
+      return new BbPromise((resolve, reject) => {
 
-        b.bundle(function(err, bundledBuf) {
+        S.utils.sDebug(`Bundling starting at ${bundleBaseDir}/${bundleEntryPt}`);
+
+        b.bundle((err, bundledBuf) => {
 
           // Reset pathDist
           _this.optimizedDistPath = path.join(_this.evt.options.pathDist, 'optimized');
+          S.utils.sDebug('optimizedDistPath:', _this.optimizedDistPath);
 
           // Set path of optimized file
           let optimizedFile = path.join(_this.optimizedDistPath, _this.function.getHandler().split('.')[0] + '.js');
@@ -241,22 +248,30 @@ module.exports = function(S) {
             reject(err);
           } else {
 
-            // Write bundled file
+            S.utils.sDebug(`Writing bundled file`);
             S.utils.writeFileSync(optimizedFile, bundledBuf);
 
-            // Minify browserified data
             if (_this.config.minify !== false) {
 
-              let result = UglifyJS.minify(optimizedFile, uglyOptions);
+              S.utils.sDebug(`Minifying bundled file ${optimizedFile}`);
 
-              if (!result || !result.code) return reject(new SError('Problem uglifying code'));
+              try {
+                let result = UglifyJS.minify(optimizedFile, uglyOptions);
+              } catch (e) {
+                console.error(`Error uglifying ${optimizedFile}`);
+                console.error(e);
+                return reject(e);
+              }
 
+              if (!result || !result.code) {
+                return reject(new SError(`Problem uglifying code ${optimizedFile}`));
+              }
+
+              S.utils.sDebug(`Writing minified file`);
               S.utils.writeFileSync(optimizedFile, result.code);
-
-              resolve(optimizedFile);
-            } else {
-              resolve(optimizedFile);
             }
+
+            resolve(optimizedFile);
           }
         });
       })
@@ -265,7 +280,7 @@ module.exports = function(S) {
           let includePaths   = _this.function.custom.optimize.includePaths || [],
               deferredCopies = [];
 
-          includePaths.forEach(function(p) {
+          includePaths.forEach(p => {
             let destPath = path.join(_this.optimizedDistPath, p),
                 srcPath  = path.join(_this.evt.options.pathDist, p),
                 destDir  = (fs.lstatSync(p).isDirectory()) ? destPath : path.dirname(destPath);
