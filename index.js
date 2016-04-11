@@ -255,8 +255,10 @@ module.exports = function(S) {
 
               S.utils.sDebug(`Minifying bundled file ${optimizedFile}`);
 
+              let result;
+              
               try {
-                let result = UglifyJS.minify(optimizedFile, uglyOptions);
+                result = UglifyJS.minify(optimizedFile, uglyOptions);
               } catch (e) {
                 console.error(`Error uglifying ${optimizedFile}`);
                 console.error(e);
