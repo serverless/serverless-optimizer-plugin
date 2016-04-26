@@ -256,7 +256,7 @@ module.exports = function(S) {
               S.utils.sDebug(`Minifying bundled file ${optimizedFile}`);
 
               let result;
-              
+
               try {
                 result = UglifyJS.minify(optimizedFile, uglyOptions);
               } catch (e) {
@@ -285,8 +285,13 @@ module.exports = function(S) {
           includePaths.forEach(p => {
             let destPath = path.join(_this.optimizedDistPath, p),
                 srcPath  = path.join(_this.evt.options.pathDist, p),
-                destDir  = (fs.lstatSync(p).isDirectory()) ? destPath : path.dirname(destPath);
+                destDir  = undefined;
 
+            try {
+              destDir = (fs.lstatSync(p).isDirectory()) ? destPath : path.dirname(destPath);
+            } catch (e) {
+              destDir = path.dirname(destPath);
+            }
             fs.mkdirsSync(destDir, '0777');
             deferredCopies.push(
               fs.copyAsync(srcPath, destPath, {clobber: true, dereference: true})
