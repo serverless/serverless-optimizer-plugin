@@ -63,7 +63,9 @@ module.exports = function(S) {
 
       // Get function
       let func = S.getProject().getFunction(evt.options.name),
+          populated = func.toObjectPopulated(evt.options),
           optimizer;
+      func.custom = populated.custom;
 
       // Skip if no optimization is set on function
       if (!func.custom || !func.custom.optimize) {
@@ -283,9 +285,16 @@ module.exports = function(S) {
               deferredCopies = [];
 
           includePaths.forEach(p => {
-            let destPath = path.join(_this.optimizedDistPath, p),
-                srcPath  = path.join(_this.evt.options.pathDist, p),
-                destDir  = (fs.lstatSync(p).isDirectory()) ? destPath : path.dirname(destPath);
+            let destPath, srcPath, destDir;
+            if( p.src && p.dest ){
+              destPath = path.join(_this.optimizedDistPath, p.dest);
+              srcPath  = path.join(_this.evt.options.pathDist, p.src);
+              destDir  = destPath;
+            } else {
+              destPath = path.join(_this.optimizedDistPath, p);
+              srcPath  = path.join(_this.evt.options.pathDist, p);
+              destDir  = (fs.lstatSync( srcPath ).isDirectory()) ? destPath : path.dirname(destPath);
+            }
 
             fs.mkdirsSync(destDir, '0777');
             deferredCopies.push(
