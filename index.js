@@ -63,7 +63,9 @@ module.exports = function(S) {
 
       // Get function
       let func = S.getProject().getFunction(evt.options.name),
+          populated = func.toObjectPopulated(evt.options),
           optimizer;
+      func.custom = populated.custom;
 
       // Skip if no optimization is set on function
       if (!func.custom || !func.custom.optimize) {
