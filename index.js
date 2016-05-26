@@ -183,7 +183,7 @@ module.exports = function(S) {
             compress: {}
           };
 
-      const handlerName   = this.function.getHandler(),
+      const handlerName   = this.function.handler,
             bundleBaseDir = fs.realpathSync(_this.evt.options.pathDist),
             bundleEntryPt = handlerName.split('.')[0] + '.' + _this.config.handlerExt;
 
@@ -256,7 +256,7 @@ module.exports = function(S) {
               S.utils.sDebug(`Minifying bundled file ${optimizedFile}`);
 
               let result;
-              
+
               try {
                 result = UglifyJS.minify(optimizedFile, uglyOptions);
               } catch (e) {
