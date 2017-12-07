@@ -8,7 +8,7 @@ Reducing the file size of your AWS Lambda Functions allows AWS to provision them
 
 **Note:** Requires Serverless *v0.5.0* or higher.
 
-###Setup
+### Setup
 
 * Install via npm in the root of your Serverless Project:
 ```
